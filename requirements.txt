@@ -1,0 +1,6 @@
+openai
+faiss-cpu
+PyPDF2
+gradio
+numpy
+python-dotenv
