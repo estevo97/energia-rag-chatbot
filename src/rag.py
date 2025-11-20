@@ -3,7 +3,7 @@ import numpy as np
 import faiss
 import os
 from dotenv import load_dotenv
-from utils import read_pdf, split_text
+from src.utils import read_pdf, clean_text, split_text
 
 load_dotenv()
 client = OpenAI()
