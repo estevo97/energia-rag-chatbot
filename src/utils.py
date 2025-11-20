@@ -10,6 +10,12 @@ def read_pdf(file_path):
             text += page.extract_text() + "\n"
     return text
 
+def clean_text(text: str) -> str:
+    import re
+    text = text.replace("\x07", "")          # elimina BEL
+    text = re.sub(r"\s+", " ", text)        # reemplaza saltos de línea, tabs, múltiples espacios por un solo espacio
+    return text.strip()
+
 def split_text(text, chunk_size=500, overlap=50):
     """
     Divide texto en chunks de tamaño aproximado `chunk_size` palabras

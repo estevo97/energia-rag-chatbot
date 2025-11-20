@@ -37,7 +37,21 @@ def main():
         print("No se encontraron PDFs en data/pdfs")
         return
     
-    # Generar embeddings para todos los chunks
+    # ------------------------------
+    # GUARDAR LOS CHUNKS PARA EL RAG
+    # ------------------------------
+    os.makedirs("data/chunks", exist_ok=True)
+
+    with open("data/chunks/chunks.txt", "w", encoding="utf-8") as f:
+        f.write("\n---\n".join(all_chunks))
+
+    print(f"Chunks guardados en data/chunks/chunks.txt ({len(all_chunks)} chunks)")
+
+    # ------------------------------
+    # GENERAR EMBEDDINGS
+    # ------------------------------
+
+    print("Generando embeddings...")
     embeddings = np.array([generate_embedding(chunk) for chunk in all_chunks])
 
     # Guardar en FAISS
