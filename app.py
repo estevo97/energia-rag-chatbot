@@ -1,81 +1,95 @@
 import gradio as gr
 from openai import OpenAI
 from dotenv import load_dotenv
-import os
-
-# Importamos nuestras funciones RAG
-from src.rag import search_similar_chunks
 from src.rag import retrieve_relevant_context
-from src.utils import clean_text
 
 load_dotenv()
 client = OpenAI()
 
+# -----------------------------
+# Historial global (solo chat real)
+# -----------------------------
+history = [
+    {"role": "system", "content": "Eres un asistente experto en energía."}
+]
 
 # -----------------------------
 # Función principal del chat
 # -----------------------------
-def rag_response(message, history, modo_rag):
+def rag_response(message, chat_history, modo_rag):
+    global history
 
-    # 1. Recuperar contexto relevante
+    # Recuperación RAG
     context = retrieve_relevant_context(message, k=5)
 
-    # 2. Si está en modo "Solo RAG" y no hay contexto → no respondemos
+    # Modo SOLO RAG sin contexto
     if modo_rag == "Solo RAG" and "No hay contexto" in context:
-        return history + [[message, "No se encontró información relevante en los documentos."]]
+        bot_msg = "No se encontró información relevante en los documentos."
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": bot_msg})
+        chat_history.append({"role": "user", "content": message})
+        chat_history.append({"role": "assistant", "content": bot_msg})
+        return chat_history
 
-    # 3. Construimos el prompt
-    system_prompt = (
-        "Eres un asistente experto en energía. "
-        "Si el usuario pregunta algo que esté en los documentos, debes usar ese contexto. "
-        "Si NO hay contexto relevante:\n"
-        "- En modo 'Solo RAG': responde 'No se encontró información en los documentos'.\n"
-        "- En modo 'Híbrido (RAG + Modelo)': responde con tu conocimiento general."
-    )
-
-    user_prompt = (
+    # Prompt para el modelo (NO se guarda en historial)
+    full_prompt = (
         f"Pregunta del usuario:\n{message}\n\n"
         f"Contexto recuperado:\n{context}\n\n"
-        "Responde de forma clara y profesional."
+        "Responde de forma clara y precisa."
     )
 
-    # 4. Llamamos al modelo
+    # Guardar mensaje del usuario en historial
+    history.append({"role": "user", "content": message})
+
+    # Llamada a OpenAI
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
+            history[0],  # system
+            {"role": "user", "content": full_prompt}
         ]
     )
 
     answer = completion.choices[0].message.content
 
-    # 5. Actualizamos el historial y devolvemos
-    history = history + [[message, answer]]
-    return history
+    # Guardar en historial real
+    history.append({"role": "assistant", "content": answer})
+
+    # Mostrar en Gradio
+    chat_history.append({"role": "user", "content": message})
+    chat_history.append({"role": "assistant", "content": answer})
+    return chat_history
 
 
 # -----------------------------
 # Interfaz Gradio
 # -----------------------------
 def build_interface():
-
     with gr.Blocks(theme="soft") as demo:
-        gr.Markdown("# 🔌 Chatbot RAG sobre Energía\n### Basado en FAISS + GPT-4o-mini")
+        gr.Markdown("# 🔌 Chatbot RAG sobre Energía")
 
         modo_rag = gr.Radio(
             ["Híbrido (RAG + Modelo)", "Solo RAG"],
             value="Híbrido (RAG + Modelo)",
-            label="Modo de respuesta"
+            label="Modo"
         )
 
-        chatbot = gr.Chatbot(height=400)
-
+        chatbot = gr.Chatbot(height=400, type="messages")
         msg = gr.Textbox(label="Escribe tu pregunta:")
         clear = gr.Button("Limpiar chat")
 
-        msg.submit(rag_response, inputs=[msg, chatbot, modo_rag], outputs=chatbot)
-        clear.click(lambda: [], None, chatbot)
+        msg.submit(
+            rag_response,
+            inputs=[msg, chatbot, modo_rag],
+            outputs=chatbot
+        )
+
+        def clear_all():
+            global history
+            history = [history[0]]  # reset al system only
+            return []
+
+        clear.click(clear_all, None, chatbot)
 
     return demo
 
