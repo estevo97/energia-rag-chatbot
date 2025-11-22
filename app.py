@@ -7,7 +7,7 @@ load_dotenv()
 client = OpenAI()
 
 # -----------------------------
-# Historial global (solo chat real)
+# Historial global (solo chat real). Este historial es el que se envía al modelo GPT para mantener coherencia. Gradio no lo usa, sólo lo usa OpenAI.
 # -----------------------------
 history = [
     {"role": "system", "content": "Eres un asistente experto en energía."}
@@ -17,20 +17,21 @@ history = [
 # Función principal del chat
 # -----------------------------
 def rag_response(message, chat_history, modo_rag):
-    global history
+    global history # Esta función deberá usar y modificar la variable history que está definida afuera.
 
     # Recuperación RAG
     context = retrieve_relevant_context(message, k=5)
 
-    # Modo SOLO RAG sin contexto
-    if modo_rag == "Solo RAG" and "No hay contexto" in context:
+    # Modo SOLO RAG sin contexto. chat_history es el historial visual para la interfaz de Gradio.
+    if modo_rag == "Solo RAG" and context is None:
         bot_msg = "No se encontró información relevante en los documentos."
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": bot_msg})
         chat_history.append({"role": "user", "content": message})
         chat_history.append({"role": "assistant", "content": bot_msg})
         return chat_history
-
+    
+    # Else
     # Prompt para el modelo (NO se guarda en historial)
     full_prompt = (
         f"Pregunta del usuario:\n{message}\n\n"
@@ -42,12 +43,15 @@ def rag_response(message, chat_history, modo_rag):
     history.append({"role": "user", "content": message})
 
     # Llamada a OpenAI
+    messages_to_send = [
+        history[0],  # system
+        *history[1:-1],  # todo lo anterior excepto el último user que vamos a reemplazar
+        {"role": "user", "content": full_prompt}
+    ]
+
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            history[0],  # system
-            {"role": "user", "content": full_prompt}
-        ]
+        messages=messages_to_send
     )
 
     answer = completion.choices[0].message.content
