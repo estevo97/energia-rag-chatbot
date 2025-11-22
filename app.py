@@ -3,6 +3,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from src.rag import retrieve_relevant_context
 
+print("Versión de Gradio:", gr.__version__)
+
 load_dotenv()
 client = OpenAI()
 
@@ -69,7 +71,7 @@ def rag_response(message, chat_history, modo_rag):
 # Interfaz Gradio
 # -----------------------------
 def build_interface():
-    with gr.Blocks(theme="soft") as demo:
+    with gr.Blocks() as demo:
         gr.Markdown("# 🔌 Chatbot RAG sobre Energía")
 
         modo_rag = gr.Radio(
@@ -78,19 +80,22 @@ def build_interface():
             label="Modo"
         )
 
-        chatbot = gr.Chatbot(height=400, type="messages")
+        # Chatbot en Gradio 6.x ya no necesita `type`
+        chatbot = gr.Chatbot(height=400)
         msg = gr.Textbox(label="Escribe tu pregunta:")
         clear = gr.Button("Limpiar chat")
 
+        # Llamada a la función rag_response
         msg.submit(
             rag_response,
             inputs=[msg, chatbot, modo_rag],
             outputs=chatbot
         )
 
+        # Función para limpiar historial
         def clear_all():
             global history
-            history = [history[0]]  # reset al system only
+            history = [history[0]]  # reset solo el system
             return []
 
         clear.click(clear_all, None, chatbot)

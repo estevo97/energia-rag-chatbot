@@ -1,6 +1,6 @@
 openai
 faiss-cpu
 PyPDF2
-gradio
+gradio>=3.52.0
 numpy
 python-dotenv
