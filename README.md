@@ -5,7 +5,9 @@
 
 **¡Haz clic aquí para abrir la app en vivo!**
 
-
+---
+---
+##  ❓ ¿Qué es?
 
 Un **chatbot interactivo** basado en RAG (*Retrieval-Augmented Generation*) y GPT-4o-mini para responder preguntas sobre energía en España, utilizando tus documentos como fuente de información.
 
