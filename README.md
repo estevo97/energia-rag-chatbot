@@ -1,7 +1,10 @@
 # 🔌 Chatbot RAG sobre Energía
 
 
-[![Open in Hugging Face](https://img.shields.io/badge/Open%20in-Hugging%20Face-blue)](https://huggingface.co/spaces/estevoag/energia-rag-chatbot) ÁBRELO CLICKANDO AQUÍ!
+[![Open in Hugging Face](https://img.shields.io/badge/Open%20in-Hugging%20Face-blue)](https://huggingface.co/spaces/estevoag/energia-rag-chatbot)
+
+**¡Haz clic aquí para abrir la app en vivo!**
+
 
 
 Un **chatbot interactivo** basado en RAG (*Retrieval-Augmented Generation*) y GPT-4o-mini para responder preguntas sobre energía en España, utilizando tus documentos como fuente de información.
