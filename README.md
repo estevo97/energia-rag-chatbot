@@ -1,8 +1,3 @@
-title: Energia Rag Chatbot
-emoji: ⚡
-colorFrom: green
-colorTo: pink
-sdk: gradio
-sdk_version: 6.0.0
-app_file: app.py
-pinned: false
+# Chatbot RAG sobre Energía
+
+[![Open in Hugging Face](https://img.shields.io/badge/Open%20in-Hugging%20Face-blue)](https://huggingface.co/spaces/estevoag/energia-rag-chatbot)
