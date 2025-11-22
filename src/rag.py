@@ -58,16 +58,32 @@ def load_chunks():
     return chunks
 
 
-def retrieve_relevant_context(query: str, k: int = 5):
-    """Devuelve los k fragmentos más relevantes ya listos para enviar al modelo GPT."""
+def retrieve_relevant_context(query: str, k: int = 5, min_relevance: float = 1.0):
+    """
+    Devuelve los k fragmentos más relevantes ya listos para enviar al modelo GPT.
+    Si NO hay fragmentos suficientemente relevantes → devuelve None.
+    """
     distances, indices = search_similar_chunks(query, k)
     chunks = load_chunks()
 
     retrieved = []
 
     for dist, idx in zip(distances, indices):
+        # descartar fragmentos con baja similitud (distancia demasiado alta)
+        if dist > min_relevance:
+            continue
+        
         if idx < len(chunks):
             retrieved.append(f"[Relevancia: {round(dist, 2)}]\n{chunks[idx]}")
 
+    # Si no se encontró nada realmente relevante
+    if len(retrieved) == 0:
+        return None
+
     context = "\n\n".join(retrieved)
+
+    # si el texto es demasiado corto, se considera sin contexto útil
+    if len(context.strip()) < 40:
+        return None
+
     return context
